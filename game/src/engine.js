@@ -2,17 +2,17 @@
 // and owns the screen state machine (title, how-to, night select, shop, intro,
 // play, pause, caught, complete). Everything the other modules compute, the
 // engine calls in the right order, sixty times a second.
-import { TILE, COLS, ROWS, VIEW_W, VIEW_H, PAR_SECONDS, GUARD } from './config.js';
+import { TILE, COLS, ROWS, VIEW_W, VIEW_H, PAR_SECONDS, GUARD, NIGHTS } from './config.js';
 import { LEVELS, parseLevel } from './levels.js';
 import { makeRng } from './random.js';
-import { createPlayer, updatePlayer, throwPuff, onExit } from './player.js';
+import { createPlayer, updatePlayer, throwPuff, dropVeil, onExit } from './player.js';
 import { createGuards, updateGuards, alertGuardsToNoise } from './guards.js';
 import { updateDetection } from './detection.js';
 import { updateItems, checkExit } from './items.js';
 import { createParticles, seedFireflies, burst, footstepDust, noiseRing, updateParticles } from './particles.js';
 import { drawWorld } from './render.js';
 import {
-  drawPlayHud, drawTitle, drawHowTo, drawNightSelect, drawShop,
+  drawPlayHud, drawTitle, drawHowTo, drawNightSelect, drawShop, drawLedger,
   drawNightIntro, drawPause, drawCaught, drawComplete, isInside,
 } from './hud.js';
 import { loadSave, storeSave, awardNight, buyUpgrade, upgradeRanks } from './meta.js';
@@ -32,6 +32,8 @@ export function createWorld(nightIndex, save, audio, seed) {
     grid: parsed.grid,
     petals: parsed.petals,
     lanterns: parsed.lanterns,
+    moonwells: parsed.moonwells,
+    veils: [],
     exit: parsed.exit,
     petalsNeeded: parsed.level.petalsNeeded,
     petalsTaken: 0,
@@ -143,6 +145,9 @@ export function updatePlay(game, input, dt) {
   if (input.pressed.puff) {
     throwPuff(world, input.mouseX, input.mouseY);
   }
+  if (input.pressed.veil) {
+    dropVeil(world);
+  }
   updatePlayer(world, input, dt);
   updateGuards(world, dt);
   updateDetection(world, dt);
@@ -191,6 +196,9 @@ export function handleClick(game, x, y) {
   else if (hit === 'how') {
     game.returnTo = 'title';
     game.screen = 'how';
+  } else if (hit === 'ledger') {
+    game.returnTo = 'title';
+    game.screen = 'ledger';
   } else if (hit === 'shop') {
     game.returnTo = game.screen === 'complete' ? 'complete' : 'title';
     game.screen = 'shop';
@@ -211,7 +219,7 @@ export function handleClick(game, x, y) {
   else if (hit === 'retry') startNight(game, game.nightIndex);
   else if (hit === 'select') game.screen = 'select';
   else if (hit === 'next') {
-    if (game.nightIndex + 1 < 7) startNight(game, game.nightIndex + 1);
+    if (game.nightIndex + 1 < NIGHTS) startNight(game, game.nightIndex + 1);
     else game.screen = 'select';
   }
 }
@@ -244,6 +252,9 @@ export function drawGame(game) {
     case 'shop':
       drawShop(ctx, world, game.ui);
       break;
+    case 'ledger':
+      drawLedger(ctx, world, game.ui);
+      break;
     case 'intro':
       drawNightIntro(ctx, world, game.ui);
       break;
@@ -272,7 +283,7 @@ export function frame(game, input, now) {
   game.lastTime = now;
   if (game.screen === 'play') {
     updatePlay(game, input, dt);
-  } else if (game.screen === 'intro' || game.screen === 'title' || game.screen === 'select' || game.screen === 'shop' || game.screen === 'how') {
+  } else if (game.screen === 'intro' || game.screen === 'title' || game.screen === 'select' || game.screen === 'shop' || game.screen === 'how' || game.screen === 'ledger') {
     updateAttract(game, dt);
     if (input.pressed.enter || input.pressed.space) {
       if (game.screen === 'intro') beginPlay(game);

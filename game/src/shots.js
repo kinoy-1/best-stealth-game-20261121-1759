@@ -98,8 +98,8 @@ export function buildShot(name) {
   const spec = SHOTS[name] || SHOTS.cover;
   const audio = silentAudio();
   const save = {
-    unlocked: 7,
-    seals: [7, 5, 3, 1, 0, 0, 0],
+    unlocked: 10,
+    seals: [7, 5, 3, 1, 0, 0, 0, 0, 0, 0],
     glimmerBank: 1240,
     upgrades: { 'silent-wings': 1, 'long-antennae': 1 },
     nightsPlayed: 12,

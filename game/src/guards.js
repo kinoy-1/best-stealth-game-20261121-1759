@@ -7,7 +7,7 @@
 // that sees the moth clearly enough fills with suspicion, and at 100 the bell
 // tolls. Patrols are learnable: the same route, the same pauses, every night.
 import { GUARD, TILE } from './config.js';
-import { KEEPER_NAMES, BEARER_NAMES, RINGER_NAMES, WATCHER_NAMES } from './names.js';
+import { KEEPER_NAMES, BEARER_NAMES, RINGER_NAMES, WATCHER_NAMES, HOUND_NAMES } from './names.js';
 import { walkableAt, tileAt } from './levels.js';
 import { clamp, angleDiff, easeInOutSine } from './random.js';
 
@@ -16,13 +16,14 @@ const TYPE_NAMES = {
   bearer: BEARER_NAMES,
   ringer: RINGER_NAMES,
   watcher: WATCHER_NAMES,
+  hound: HOUND_NAMES,
 };
 
 export function createGuards(levelData) {
   return levelData.guards.map((g, i) => {
     const [tx, ty] = g.path[0];
     const names = TYPE_NAMES[g.type] || KEEPER_NAMES;
-    const baseSpeed = g.type === 'bearer' ? GUARD.bearerSpeed : GUARD.patrolSpeed;
+    const baseSpeed = g.type === 'bearer' ? GUARD.bearerSpeed : g.type === 'hound' ? GUARD.houndPatrolSpeed : GUARD.patrolSpeed;
     return {
       id: i,
       type: g.type,
@@ -50,9 +51,32 @@ export function createGuards(levelData) {
       thoughtTimer: 0,
       exclaimTimer: 0,
       // The bell-ringer's suspicion fills faster: he trusts his eyes.
-      senseFactor: g.type === 'ringer' ? 1.45 : g.type === 'bearer' ? 0.9 : 1.0,
+      // The hound's nose is sharper still, but only up close.
+      senseFactor: g.type === 'ringer' ? 1.45 : g.type === 'bearer' ? 0.9 : g.type === 'hound' ? GUARD.houndSenseFactor : 1.0,
     };
   });
+}
+
+/**
+ * A pollen puff burst: every hound in earshot follows the scent home — not
+ * to the glow, but to where the moth stood when it threw the puff. The puff
+ * is a lure for keepers and a trail for hounds; spend it with that in mind.
+ */
+export function alertHoundsToScent(world, puff) {
+  for (const guard of world.guards) {
+    if (guard.type !== 'hound' || guard.state === 'chase') continue;
+    const d = Math.hypot(guard.x - puff.x, guard.y - puff.y);
+    if (d <= GUARD.hearPuff) {
+      guard.lastSeenX = puff.ox;
+      guard.lastSeenY = puff.oy;
+      guard.lookTimer = GUARD.houndLookSeconds;
+      if (guard.state === 'patrol' || guard.state === 'return') {
+        guard.state = 'investigate';
+        guard.suspicion = Math.max(guard.suspicion, GUARD.investigateThreshold * 0.6);
+      }
+      setThought(guard, '…a scent on the wind!', 2.2);
+    }
+  }
 }
 
 /** Face a target point smoothly, at a limited turn rate. */
@@ -106,7 +130,9 @@ export function updateGuards(world, dt) {
       }
     } else if (guard.state === 'investigate') {
       // Walk to the last thing that stirred suspicion, then look around.
-      if (moveToward(world, guard, guard.lastSeenX, guard.lastSeenY, GUARD.investigateSpeed * guard.speedFactor, dt)) {
+      // A hound on a scent trail runs: the nose does not dawdle.
+      const speed = guard.type === 'hound' ? GUARD.houndTrackSpeed : GUARD.investigateSpeed;
+      if (moveToward(world, guard, guard.lastSeenX, guard.lastSeenY, speed * guard.speedFactor, dt)) {
         guard.lookTimer -= dt;
         guard.dir += 1.6 * dt; // slow scan
         if (guard.lookTimer <= 0) {

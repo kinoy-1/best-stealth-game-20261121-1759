@@ -58,6 +58,7 @@ export function createInput(canvas) {
       event.preventDefault();
     }
     if (event.code === 'KeyQ') input.pressed.puff = true;
+    if (event.code === 'KeyE') input.pressed.veil = true;
     if (event.code === 'Escape' || event.code === 'KeyP') input.pressed.pause = true;
     if (event.code === 'KeyM') input.pressed.mute = true;
     if (event.code === 'Enter') input.pressed.enter = true;

@@ -5,7 +5,7 @@
 // readable at a glance: the judge's first look is at the screenshots, so the
 // HUD stays quiet and the garden stays loud.
 import { VIEW_W, VIEW_H, TILE, PALETTE, UPGRADES, NIGHTS } from './config.js';
-import { NIGHT_NAMES, NIGHT_FLAVOUR, NIGHT_TIPS, SEAL_NAMES, journalLine } from './names.js';
+import { GAME_SUBTITLE, NIGHT_NAMES, NIGHT_FLAVOUR, NIGHT_TIPS, SEAL_NAMES, LEDGER, journalLine } from './names.js';
 import { formatTime, sealList, nightRank } from './scoring.js';
 import { totalSeals, upgradeState } from './meta.js';
 import { drawWorld } from './render.js';
@@ -53,9 +53,10 @@ export function drawPlayHud(ctx, world) {
   ctx.fillText(`✦ ${world.glimmer} glimmer`, 480, 23);
   ctx.fillText(`◷ ${formatTime(world.time)}`, 640, 23);
   ctx.fillText(`❀ puffs: ${world.player.puffs}`, 760, 23);
+  ctx.fillText(`✧ veils: ${world.player.veils}`, 870, 23);
   if (world.gateOpen) {
     ctx.fillStyle = '#bcd2ff';
-    ctx.fillText('☾ Moon Gate open — go!', 900, 23);
+    ctx.fillText('☾ Moon Gate open — go!', 980, 23);
   }
   drawSuspicionEye(ctx, world);
   drawMinimap(ctx, world);
@@ -63,7 +64,7 @@ export function drawPlayHud(ctx, world) {
   ctx.fillStyle = 'rgba(242,234,216,0.55)';
   ctx.font = '12px Georgia, serif';
   ctx.textAlign = 'left';
-  ctx.fillText('WASD move · Shift run · C sneak · Q pollen puff · Esc pause · M mute', 16, VIEW_H - 12);
+  ctx.fillText('WASD move · Shift run · C sneak · Q pollen puff · E moonpetal veil · Esc pause · M mute', 16, VIEW_H - 12);
   // The bell banner.
   if (world.alarm.phase === 'bell') {
     ctx.fillStyle = 'rgba(120, 10, 10, 0.85)';
@@ -127,6 +128,7 @@ export function drawMinimap(ctx, world) {
       const ch = world.grid[y][x];
       if (ch === '#') ctx.fillStyle = '#2c4a34';
       else if (ch === '~') ctx.fillStyle = '#17617d';
+      else if (ch === 'W') ctx.fillStyle = '#7fd4ff';
       else if (ch === 'B' || ch === 'T') ctx.fillStyle = '#1d5c33';
       else continue;
       ctx.fillRect(mx + x * TILE * sx, my + y * TILE * sy, TILE * sx + 0.5, TILE * sy + 0.5);
@@ -178,7 +180,7 @@ function titleText(ctx, world) {
   ctx.fillText('Moonpetal Heist', VIEW_W / 2, 210);
   ctx.font = 'italic 20px Georgia, serif';
   ctx.fillStyle = 'rgba(242,234,216,0.75)';
-  ctx.fillText('a moth-thief, seven nights, one lantern garden', VIEW_W / 2, 248);
+  ctx.fillText(GAME_SUBTITLE, VIEW_W / 2, 248);
   ctx.font = '15px Georgia, serif';
   ctx.fillStyle = 'rgba(242,234,216,0.6)';
   ctx.fillText('Steal the moonpetals. Mind the lanterns. Never let the bell toll.', VIEW_W / 2, 282);
@@ -195,17 +197,19 @@ export function drawTitle(ctx, world, ui) {
   ctx.textAlign = 'center';
   const summary = save.nightsPlayed === 0 ? 'A new moth arrives at the garden gate.' : `${totalSeals(save)} moth-seals · ${save.nightsCleared} nights cleared · ${save.glimmerBank} glimmer`;
   ctx.fillText(summary, VIEW_W / 2, 330);
-  button(ctx, 490, 380, 300, 52, 'Begin the Heist', true, ui.hover === 'begin');
-  button(ctx, 490, 446, 300, 52, 'Mothcraft — Upgrades', true, ui.hover === 'shop');
-  button(ctx, 490, 512, 300, 52, 'How to Play', true, ui.hover === 'how');
+  button(ctx, 490, 360, 300, 52, 'Begin the Heist', true, ui.hover === 'begin');
+  button(ctx, 490, 424, 300, 52, 'Mothcraft — Upgrades', true, ui.hover === 'shop');
+  button(ctx, 490, 488, 300, 52, 'How to Play', true, ui.hover === 'how');
+  button(ctx, 490, 552, 300, 52, "Keeper's Ledger", true, ui.hover === 'ledger');
   ctx.font = '13px Georgia, serif';
   ctx.fillStyle = 'rgba(242,234,216,0.5)';
-  ctx.fillText('WASD move · Shift run · C sneak · Q pollen puff · Esc pause · M mute', VIEW_W / 2, 600);
-  ctx.fillText('An original game — its garden, keepers and moth-thief were invented for make.fun.', VIEW_W / 2, 626);
+  ctx.fillText('WASD move · Shift run · C sneak · Q pollen puff · E moonpetal veil · Esc pause · M mute', VIEW_W / 2, 640);
+  ctx.fillText('An original game — its garden, keepers and moth-thief were invented for make.fun.', VIEW_W / 2, 666);
   ui.buttons = [
-    { id: 'begin', x: 490, y: 380, w: 300, h: 52 },
-    { id: 'shop', x: 490, y: 446, w: 300, h: 52 },
-    { id: 'how', x: 490, y: 512, w: 300, h: 52 },
+    { id: 'begin', x: 490, y: 360, w: 300, h: 52 },
+    { id: 'shop', x: 490, y: 424, w: 300, h: 52 },
+    { id: 'how', x: 490, y: 488, w: 300, h: 52 },
+    { id: 'ledger', x: 490, y: 552, w: 300, h: 52 },
   ];
 }
 
@@ -228,6 +232,11 @@ export function drawHowTo(ctx, world, ui) {
     '• Crouch (C) to move slower and smaller. Run (Shift) to move fast —',
     '  but running is loud, and keepers hear footsteps.',
     '• Q throws a pollen puff: the glow pulls keepers to look at it.',
+    '  But a Pollen Hound follows the scent back to where you threw it.',
+    '• E drops a Moonpetal Veil: a circle of silk no eye can see through,',
+    '  for six seconds. It does not move with you.',
+    '• Moonwell pools glow cold blue and light you up. Cross them behind',
+    '  a hedge — or not at all. A hound’s nose dies past 150 paces.',
     '• Gather enough petals and the Moon Gate opens. Reach it to clear',
     '  the night. Three moth-seals per night: Unseen, Petal Perfect,',
     '  Swift Moth. Glimmer buys Mothcraft upgrades between nights.',
@@ -250,31 +259,32 @@ export function drawNightSelect(ctx, world, ui) {
   ctx.fillText('Choose a Night', VIEW_W / 2, 96);
   ctx.font = '15px Georgia, serif';
   ctx.fillStyle = 'rgba(242,234,216,0.75)';
-  ctx.fillText(`${totalSeals(world.save)} of 21 moth-seals  ·  ${world.save.glimmerBank} glimmer in the satchel`, VIEW_W / 2, 126);
+  ctx.fillText(`${totalSeals(world.save)} of 30 moth-seals  ·  ${world.save.glimmerBank} glimmer in the satchel`, VIEW_W / 2, 126);
   ui.buttons = [];
+  const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
   for (let i = 0; i < NIGHTS; i += 1) {
-    const x = 190 + (i % 4) * 240;
-    const y = 170 + Math.floor(i / 4) * 190;
+    const x = 100 + (i % 5) * 220;
+    const y = 170 + Math.floor(i / 5) * 190;
     const unlocked = i < world.save.unlocked;
     const seals = world.save.seals[i];
-    panel(ctx, x, y, 210, 160, unlocked ? 0.92 : 0.55);
+    panel(ctx, x, y, 200, 160, unlocked ? 0.92 : 0.55);
     ctx.fillStyle = unlocked ? '#f2ead8' : 'rgba(242,234,216,0.4)';
-    ctx.font = 'bold 17px Georgia, serif';
-    ctx.fillText(unlocked ? NIGHT_NAMES[i] : `Night ${['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'][i]} — locked`, x + 105, y + 34);
+    ctx.font = 'bold 16px Georgia, serif';
+    ctx.fillText(unlocked ? NIGHT_NAMES[i] : `Night ${ROMAN[i]} — locked`, x + 100, y + 34);
     ctx.font = '13px Georgia, serif';
     ctx.fillStyle = unlocked ? 'rgba(242,234,216,0.75)' : 'rgba(242,234,216,0.35)';
     const flavour = unlocked ? NIGHT_FLAVOUR[i] : 'Clear the night before to open this wing of the garden.';
-    wrapText(ctx, flavour, x + 105, y + 62, 186, 17);
+    wrapText(ctx, flavour, x + 100, y + 62, 180, 17);
     // Moth-seals as three small moons.
     for (let s = 0; s < 3; s += 1) {
       const earned = Boolean(seals & (1 << s));
       ctx.fillStyle = earned ? '#ffd166' : 'rgba(242,234,216,0.25)';
       ctx.beginPath();
-      ctx.arc(x + 70 + s * 35, y + 138, 9, 0, Math.PI * 2);
+      ctx.arc(x + 65 + s * 35, y + 138, 9, 0, Math.PI * 2);
       ctx.fill();
       ctx.fillStyle = earned ? '#1a1a1a' : 'rgba(242,234,216,0.4)';
       ctx.font = 'bold 10px Georgia, serif';
-      ctx.fillText(SEAL_NAMES[s][0], x + 70 + s * 35, y + 142);
+      ctx.fillText(SEAL_NAMES[s][0], x + 65 + s * 35, y + 142);
     }
     if (unlocked) ui.buttons.push({ id: `night-${i}`, x, y, w: 210, h: 160 });
   }
@@ -297,22 +307,72 @@ export function drawShop(ctx, world, ui) {
   ctx.fillText(`Glimmer in the satchel: ${world.save.glimmerBank}  ·  spent on wings, charms and cloaks — kept between nights`, VIEW_W / 2, 118);
   ui.buttons = [];
   UPGRADES.forEach((up, i) => {
-    const y = 150 + i * 96;
+    const y = 140 + i * 78;
     const state = upgradeState(world.save, up);
-    panel(ctx, 240, y, 800, 82, 0.92);
+    panel(ctx, 240, y, 800, 68, 0.92);
     ctx.textAlign = 'left';
     ctx.fillStyle = '#f2ead8';
     ctx.font = 'bold 18px Georgia, serif';
-    ctx.fillText(`${up.name}  ${'●'.repeat(state.owned)}${'○'.repeat(up.max - state.owned)}`, 262, y + 28);
+    ctx.fillText(`${up.name}  ${'●'.repeat(state.owned)}${'○'.repeat(up.max - state.owned)}`, 262, y + 26);
     ctx.font = '14px Georgia, serif';
     ctx.fillStyle = 'rgba(242,234,216,0.8)';
-    ctx.fillText(up.desc, 262, y + 56);
+    ctx.fillText(up.desc, 262, y + 50);
     const label = state.maxed ? 'Mastered' : `Buy — ${state.cost} glimmer`;
-    button(ctx, 880, y + 20, 140, 42, label, !state.maxed && state.affordable, ui.hover === `buy-${up.id}`);
-    if (!state.maxed) ui.buttons.push({ id: `buy-${up.id}`, x: 880, y: y + 20, w: 140, h: 42 });
+    button(ctx, 880, y + 13, 140, 42, label, !state.maxed && state.affordable, ui.hover === `buy-${up.id}`);
+    if (!state.maxed) ui.buttons.push({ id: `buy-${up.id}`, x: 880, y: y + 13, w: 140, h: 42 });
   });
-  button(ctx, 540, 660, 200, 46, 'Back', true, ui.hover === 'back');
-  ui.buttons.push({ id: 'back', x: 540, y: 660, w: 200, h: 46 });
+  button(ctx, 540, 700, 200, 46, 'Back', true, ui.hover === 'back');
+  ui.buttons.push({ id: 'back', x: 540, y: 700, w: 200, h: 46 });
+}
+
+/** The Keeper's Ledger: the moth's field notes on everything that hunts it. */
+export function drawLedger(ctx, world, ui) {
+  drawWorld(ctx, world);
+  ctx.fillStyle = 'rgba(3, 8, 20, 0.72)';
+  ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#f2ead8';
+  ctx.font = 'bold 30px Georgia, serif';
+  ctx.fillText("The Keeper's Ledger", VIEW_W / 2, 84);
+  ctx.font = 'italic 15px Georgia, serif';
+  ctx.fillStyle = 'rgba(242,234,216,0.75)';
+  ctx.fillText('Everything Pip has learned about the garden — and the weakness to use.', VIEW_W / 2, 112);
+  ui.buttons = [];
+  LEDGER.forEach((entry, i) => {
+    const y = 136 + i * 78;
+    panel(ctx, 180, y, 920, 72, 0.92);
+    ctx.fillStyle = entry.colour;
+    ctx.beginPath();
+    ctx.arc(212, y + 33, 11, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#f2ead8';
+    ctx.font = 'bold 17px Georgia, serif';
+    ctx.fillText(entry.name, 236, y + 25);
+    ctx.font = '14px Georgia, serif';
+    ctx.fillStyle = 'rgba(242,234,216,0.85)';
+    wrapTextLeft(ctx, entry.text, 236, y + 47, 840, 16);
+  });
+  button(ctx, 540, 700, 200, 46, 'Back', true, ui.hover === 'back');
+  ui.buttons.push({ id: 'back', x: 540, y: 700, w: 200, h: 46 });
+}
+
+/** Left-aligned wrapped text, for ledger entries. */
+function wrapTextLeft(ctx, text, x, y, maxWidth, lineHeight) {
+  const words = text.split(' ');
+  let line = '';
+  let row = 0;
+  for (const word of words) {
+    const test = line ? line + ' ' + word : word;
+    if (ctx.measureText(test).width > maxWidth && line) {
+      ctx.fillText(line, x, y + row * lineHeight);
+      row += 1;
+      line = word;
+    } else {
+      line = test;
+    }
+  }
+  if (line) ctx.fillText(line, x, y + row * lineHeight);
 }
 
 export function drawNightIntro(ctx, world, ui) {

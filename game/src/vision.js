@@ -40,6 +40,13 @@ export function lightAt(world, x, y) {
   if (gateD < LIGHT.moonRadius) {
     light = Math.max(light, (1 - gateD / LIGHT.moonRadius) * 0.55);
   }
+  // A moonwell pool glows cold blue: a moth near one is almost fully lit.
+  for (const well of world.moonwells || []) {
+    const d = dist(x, y, well.x, well.y);
+    if (d < LIGHT.moonwellRadius) {
+      light = Math.max(light, LIGHT.moonwellLit * (1 - (d / LIGHT.moonwellRadius) * 0.4));
+    }
+  }
   return clamp(light, 0, 1);
 }
 
@@ -51,7 +58,19 @@ export function coneOf(guard) {
   if (guard.type === 'watcher') {
     return { range: GUARD.coneRange * 1.1, half: GUARD.coneHalfAngle * 0.9 };
   }
+  if (guard.type === 'hound') {
+    // A scent-cone, not a sight-cone: short, wide, and it only smells close.
+    return { range: GUARD.houndConeRange, half: GUARD.houndConeHalfAngle };
+  }
   return { range: GUARD.coneRange, half: GUARD.coneHalfAngle };
+}
+
+/** Is the moth standing inside an active Moonpetal Veil? */
+export function inVeil(world, x, y) {
+  for (const veil of world.veils || []) {
+    if (veil.t > 0 && dist(x, y, veil.x, veil.y) < veil.radius) return true;
+  }
+  return false;
 }
 
 /**
@@ -66,6 +85,9 @@ export function guardSeesMoth(world, guard) {
   const stance = player.sneaking ? 0.62 : player.running ? 1.18 : 1.0;
   const effectiveRange = cone.range * stance;
   if (d > effectiveRange) return 0;
+  // Inside a Moonpetal Veil the moth cannot be seen at all — the silk hides
+  // it from every eye, hound nose included.
+  if (inVeil(world, player.x, player.y)) return 0;
   // Inside a bush or tall grass the moth is invisible unless the keeper is
   // almost on top of it.
   if (isHiddenInCover(world.grid, player.x, player.y) && d > 42) return 0;

@@ -62,6 +62,26 @@ function drawGround(ctx, world) {
         ctx.moveTo(px + 8, py + 22 - wave);
         ctx.lineTo(px + TILE - 8, py + 22 - wave);
         ctx.stroke();
+      } else if (ch === 'W') {
+        // A moonwell pool: cold blue water that glows like a stage.
+        ctx.fillStyle = h > 0.5 ? PALETTE.moonwellDeep : '#155a7d';
+        ctx.fillRect(px, py, TILE, TILE);
+        ctx.save();
+        ctx.globalAlpha = 0.5 + 0.3 * Math.sin(world.time * 2 + (x + y) * 0.7);
+        ctx.fillStyle = PALETTE.moonwell;
+        ctx.beginPath();
+        ctx.arc(px + 16, py + 16, 9, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        ctx.strokeStyle = 'rgba(127,212,255,0.5)';
+        ctx.lineWidth = 1;
+        const wave = Math.sin(world.time * 1.8 + (x + y) * 1.1) * 2;
+        ctx.beginPath();
+        ctx.moveTo(px + 6, py + 10 + wave);
+        ctx.lineTo(px + TILE - 6, py + 10 + wave);
+        ctx.moveTo(px + 8, py + 22 - wave);
+        ctx.lineTo(px + TILE - 8, py + 22 - wave);
+        ctx.stroke();
       } else if (ch === 'F') {
         ctx.fillStyle = PALETTE.lawn;
         ctx.fillRect(px, py, TILE, TILE);
@@ -207,12 +227,12 @@ function drawGuard(ctx, world, guard) {
   const warm = guard.suspicion >= 34;
   // The vision cone: drawn later, over the dark — see drawCones.
   // Body: a cloaked keeper with a lantern.
-  const cloak = guard.type === 'bearer' ? PALETTE.bearer : guard.type === 'ringer' ? PALETTE.ringer : guard.type === 'watcher' ? PALETTE.watcher : PALETTE.keeperCloak;
+  const cloak = guard.type === 'bearer' ? PALETTE.bearer : guard.type === 'ringer' ? PALETTE.ringer : guard.type === 'watcher' ? PALETTE.watcher : guard.type === 'hound' ? PALETTE.houndCloak : PALETTE.keeperCloak;
   ctx.fillStyle = cloak;
   ctx.beginPath();
   ctx.arc(guard.x, guard.y, GUARD.radius, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = PALETTE.keeper;
+  ctx.fillStyle = guard.type === 'hound' ? '#d9ccff' : PALETTE.keeper;
   ctx.beginPath();
   ctx.arc(guard.x, guard.y, 7.5, 0, Math.PI * 2);
   ctx.fill();
@@ -228,6 +248,13 @@ function drawGuard(ctx, world, guard) {
   ctx.beginPath();
   ctx.arc(lx, ly, 4.5, 0, Math.PI * 2);
   ctx.fill();
+  if (guard.type === 'hound') {
+    // A hound's nose: a violet dot that sniffs the wind ahead of it.
+    ctx.fillStyle = PALETTE.hound;
+    ctx.beginPath();
+    ctx.arc(guard.x + Math.cos(guard.dir) * 10, guard.y + Math.sin(guard.dir) * 10, 3, 0, Math.PI * 2);
+    ctx.fill();
+  }
   // A "!" when the keeper is alarmed, "?" when merely suspicious.
   if (hot) {
     drawMark(ctx, guard.x, guard.y - 24, '!', '#ff6b5e');
@@ -264,16 +291,45 @@ function drawCones(ctx, world) {
     const cone = coneOf(guard);
     const hot = guard.state === 'chase';
     const warm = guard.suspicion >= 34;
-    ctx.fillStyle = hot ? PALETTE.coneHot : warm ? 'rgba(255, 160, 60, 0.26)' : PALETTE.cone;
+    // A hound's cone is a scent-cone: violet, not lamplight.
+    let fill = hot ? PALETTE.coneHot : warm ? 'rgba(255, 160, 60, 0.26)' : PALETTE.cone;
+    let edge = hot ? 'rgba(255,90,60,0.5)' : 'rgba(255,200,100,0.28)';
+    if (guard.type === 'hound' && !hot) {
+      fill = warm ? 'rgba(170, 120, 220, 0.30)' : 'rgba(138, 111, 192, 0.22)';
+      edge = 'rgba(180, 150, 230, 0.35)';
+    }
+    ctx.fillStyle = fill;
     ctx.beginPath();
     ctx.moveTo(guard.x, guard.y);
     ctx.arc(guard.x, guard.y, cone.range, guard.dir - cone.half, guard.dir + cone.half);
     ctx.closePath();
     ctx.fill();
     // The cone's edge, so its sweep reads at a glance.
-    ctx.strokeStyle = hot ? 'rgba(255,90,60,0.5)' : 'rgba(255,200,100,0.28)';
+    ctx.strokeStyle = edge;
     ctx.lineWidth = 1.5;
     ctx.stroke();
+  }
+}
+
+/** Moonpetal Veils: circles of spun silk no eye can see through. */
+function drawVeils(ctx, world) {
+  for (const veil of world.veils || []) {
+    const k = Math.max(0, Math.min(1, veil.t / 1.2)); // thins in its last second
+    ctx.save();
+    ctx.globalAlpha = 0.1 + 0.28 * k;
+    ctx.fillStyle = PALETTE.veil;
+    ctx.beginPath();
+    ctx.arc(veil.x, veil.y, veil.radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 0.6 * k;
+    ctx.strokeStyle = PALETTE.veilEdge;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 6]);
+    ctx.beginPath();
+    ctx.arc(veil.x, veil.y, veil.radius, world.time, world.time + Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
   }
 }
 
@@ -375,6 +431,11 @@ function drawDarkness(ctx, world) {
     const flicker = 1 + Math.sin(world.time * 7 + lantern.flicker) * 0.05;
     hole(lantern.x, lantern.y, LIGHT.lanternRadius * flicker, 0.95);
   }
+  // Moonwell pools glow cold blue across their court.
+  for (const well of world.moonwells || []) {
+    const shimmer = 1 + Math.sin(world.time * 2 + well.phase) * 0.06;
+    hole(well.x, well.y, LIGHT.moonwellRadius * shimmer, 0.5);
+  }
   hole(world.exit.x, world.exit.y, world.gateOpen ? LIGHT.moonRadius : 190, world.gateOpen ? 0.9 : 0.6);
   hole(world.player.x, world.player.y, 74, 0.55);
   for (const guard of world.guards) {
@@ -404,6 +465,7 @@ export function drawWorld(ctx, world) {
   drawExit(ctx, world);
   drawCover(ctx, world);
   drawPuffs(ctx, world);
+  drawVeils(ctx, world);
   drawParticles(ctx, world);
   drawDarkness(ctx, world);
   drawCones(ctx, world);

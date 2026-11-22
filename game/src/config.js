@@ -53,6 +53,15 @@ export const GUARD = {
   // Night Watcher: stands still, sweeps its beam back and forth.
   watcherSweepDegrees: 110,
   watcherSweepSeconds: 5.0,
+  // Pollen Hound: a short, wide scent-cone and a nose for pollen. It follows
+  // a puff's scent back to where the moth threw it from, and it fills with
+  // suspicion fast up close — but its nose is useless past 150 px.
+  houndConeRange: 150,
+  houndConeHalfAngle: (55 * Math.PI) / 180,
+  houndSenseFactor: 1.3,
+  houndPatrolSpeed: 66,
+  houndTrackSpeed: 122,
+  houndLookSeconds: 3.5,
 };
 
 // ---- light and shadow ----
@@ -61,6 +70,8 @@ export const GUARD = {
 export const LIGHT = {
   lanternRadius: 150, // px of warm light around a lantern post
   moonRadius: 420, // the moon gate's cold glow
+  moonwellRadius: 110, // a moonwell pool glows cold blue across its court
+  moonwellLit: 0.8, // standing near a moonwell, the moth is almost fully lit
   // How much the dark protects: suspicion fills at this fraction in shadow.
   shadowProtection: 0.12,
   bushProtection: 0.0, // inside a bush the moth cannot be seen at all
@@ -94,9 +105,24 @@ export const SCORE = {
   sealPerNight: 3, // Unseen, Petal Perfect, Swift Moth
 };
 
-// ---- the seven nights ----
-export const NIGHTS = 7;
-export const PAR_SECONDS = [75, 95, 110, 120, 135, 150, 180];
+// ---- the moonpetal veil (the second tool) ----
+// Press E: the moth drops a veil of spun moonpetal silk at its feet. Inside
+// the veil's circle no keeper's eye can find it — a portable bush, but it
+// does not move, it shimmers faintly, and it fades. One charge a night.
+export const VEIL = {
+  startCharges: 1,
+  maxCharges: 3,
+  radius: 72,
+  seconds: 6.0,
+  cooldown: 0.6,
+};
+
+// ---- the seven nights of the Lantern Garden, and the three of the Moonwell ----
+// The first garden teaches the moth; the second garden, past the Moon Gate,
+// tests it: moonwell pools that light the moth like a stage, and Pollen
+// Hounds that follow a puff's scent home.
+export const NIGHTS = 10;
+export const PAR_SECONDS = [75, 95, 110, 120, 135, 150, 180, 165, 190, 210];
 
 // ---- mothcraft upgrades (the meta shop) ----
 export const UPGRADES = [
@@ -133,7 +159,21 @@ export const UPGRADES = [
     name: 'Mooncloak',
     cost: 600,
     max: 1,
-    desc: 'Once per night, being caught only costs the cloak: the moth melts into moonlight and the keepers lose the trail.',
+    desc: 'Once per night, being caught only costs the cloak: the moth melts into moonlight.',
+  },
+  {
+    id: 'veil-pouch',
+    name: 'Veil Pouch',
+    cost: 350,
+    max: 2,
+    desc: 'Each rank: +1 Moonpetal Veil charge every night. Silk enough for two disappearances.',
+  },
+  {
+    id: 'scent-ward',
+    name: 'Scent-Ward',
+    cost: 400,
+    max: 2,
+    desc: 'Each rank: Pollen Hounds fill with suspicion 30% slower and give up sooner.',
   },
 ];
 
@@ -165,6 +205,12 @@ export const PALETTE = {
   bearer: '#e0a458',
   ringer: '#c97b7b',
   watcher: '#9db4d8',
+  hound: '#8a6fc0',
+  houndCloak: '#4a3572',
+  veil: '#c9b8ff',
+  veilEdge: 'rgba(201, 184, 255, 0.55)',
+  moonwell: '#7fd4ff',
+  moonwellDeep: '#1d5f8a',
   cone: 'rgba(255, 179, 71, 0.20)',
   coneHot: 'rgba(255, 90, 60, 0.30)',
   hud: '#f2ead8',
@@ -175,8 +221,10 @@ export const PALETTE = {
 // ---- screenshot scenes (?shot=...) ----
 // Deterministic, seeded scenes so the four screenshots are real renders of the
 // game's own code, taken by the maker, and reproducible.
+// The cover shows the new garden: Night VIII, the Moonwell, a hound on the
+// scent and the moth mid-steal — the revision's new content, first.
 export const SHOTS = {
-  cover: { night: 3, seconds: 8, seed: 7 },
+  cover: { night: 7, seconds: 8, seed: 7 },
   patrol: { night: 1, seconds: 9, seed: 3 },
   alarm: { night: 4, seconds: 17, seed: 11 },
   meta: { night: 0, seconds: 0, seed: 1 }, // the night-select screen

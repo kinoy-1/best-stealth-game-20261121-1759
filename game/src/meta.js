@@ -9,7 +9,7 @@ const SAVE_KEY = 'moonpetal-heist-save-v1';
 export function emptySave() {
   return {
     unlocked: 1, // nights are 1-based here: night 1 is open
-    seals: [0, 0, 0, 0, 0, 0, 0], // bitmask per night: 1 Unseen, 2 Petal Perfect, 4 Swift
+    seals: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], // bitmask per night: 1 Unseen, 2 Petal Perfect, 4 Swift
     glimmerBank: 0,
     upgrades: {}, // id -> ranks owned
     nightsPlayed: 0,
@@ -47,7 +47,7 @@ export function storeSave(save) {
   }
 }
 
-/** Total moth-seals earned across all nights (21 at most). */
+/** Total moth-seals earned across all nights (30 at most). */
 export function totalSeals(save) {
   let total = 0;
   for (const mask of save.seals) {

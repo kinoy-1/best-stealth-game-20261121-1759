@@ -5,10 +5,13 @@
 // arc to where they were thrown, burst into glowing pollen, and pull every
 // keeper in earshot over to look at the sparkle.
 import { SCORE, PUFF, GUARD } from './config.js';
-import { alertGuardsToNoise } from './guards.js';
+import { alertGuardsToNoise, alertHoundsToScent } from './guards.js';
 import { dist } from './random.js';
 
 export function updateItems(world, dt) {
+  // Moonpetal Veils fade: silk thins, then the circle is gone.
+  for (const veil of world.veils || []) veil.t -= dt;
+  world.veils = (world.veils || []).filter((veil) => veil.t > 0);
   const p = world.player;
   // Moonpetals: drift close and the petal floats into the satchel.
   for (const petal of world.petals) {
@@ -42,6 +45,9 @@ export function updateItems(world, dt) {
         world.audio.puffBurst();
         world.burst(puff.x, puff.y, '#ffe066', 22);
         alertGuardsToNoise(world, puff.x, puff.y, GUARD.hearPuff);
+        // And the hounds: they do not come to the glow — they follow the
+        // scent back to where the moth stood when it threw the puff.
+        alertHoundsToScent(world, puff);
         world.addFloatText(puff.x, puff.y - 18, 'pollen!', '#ffe066', 1.4);
       }
     } else if (puff.state === 'burst') {

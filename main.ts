@@ -8,12 +8,13 @@
 // make.fun library.
 //
 // The game: you are Pip, a moth-thief stealing moonpetals from a lantern-lit
-// garden over seven nights. Lantern Keepers sweep vision cones across the
-// paths; shadow bushes and tall grass hide you; lantern-light exposes you.
-// Patrols can be learned, pollen puffs distract, the bell tolls when you are
-// seen, and every night ends at the Moon Gate. Glimmer buys Mothcraft
-// upgrades between nights; three moth-seals per night reward unseen, perfect
-// and swift play.
+// garden over ten nights, then past the Moon Gate into the Moonwell Garden,
+// where cold pools light a moth like a stage and Pollen Hounds follow a puff's
+// scent home. Lantern Keepers sweep vision cones across the paths; shadow
+// bushes and tall grass hide you; lantern-light exposes you. Patrols can be
+// learned, pollen puffs distract, the bell tolls when you are seen, and every
+// night ends at the Moon Gate. Glimmer buys Mothcraft upgrades between nights;
+// three moth-seals per night reward unseen, perfect and swift play.
 //
 // Serve it locally with `node serve.ts`, then open http://localhost:8080.
 // Outside the grader's container, MAKEFUN_OUTPUT_DIR stands in for /output:

@@ -166,6 +166,13 @@ export function createAudio() {
       this.tone(1568, 1.3, 'sine', 0.05, 0.3);
     },
 
+    veil() {
+      // Silk unfurling: a soft high shimmer that falls like a curtain.
+      this.tone(1568, 0.5, 'sine', 0.07);
+      this.tone(1175, 0.7, 'sine', 0.06, 0.08);
+      this.tone(2093, 0.9, 'sine', 0.04, 0.16);
+    },
+
     uiClick() {
       this.tone(660, 0.08, 'sine', 0.08);
     },

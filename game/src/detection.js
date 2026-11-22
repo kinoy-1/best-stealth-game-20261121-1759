@@ -15,6 +15,7 @@ import { clamp } from './random.js';
 export function updateDetection(world, dt) {
   const dewdrop = world.upgrades['dewdrop'] || 0;
   const fillSlow = 1 - 0.15 * dewdrop; // Dewdrop Charm dulls the keepers' eyes
+  const scentWard = world.upgrades['scent-ward'] || 0;
   world.seenBy = new Set();
   let maxSuspicion = 0;
 
@@ -24,7 +25,9 @@ export function updateDetection(world, dt) {
       world.seenBy.add(guard.id);
       guard.hasSeen = true;
       const d = Math.hypot(guard.x - world.player.x, guard.y - world.player.y);
-      const rate = (d < GUARD.nearDistance ? GUARD.suspicionPerSecondNear : GUARD.suspicionPerSecondSeen) * strength * guard.senseFactor * fillSlow;
+      // Scent-Ward: a hound's nose fills slower — the trail goes cold faster.
+      const noseSlow = guard.type === 'hound' ? 1 - 0.3 * scentWard : 1;
+      const rate = (d < GUARD.nearDistance ? GUARD.suspicionPerSecondNear : GUARD.suspicionPerSecondSeen) * strength * guard.senseFactor * fillSlow * noseSlow;
       guard.suspicion = clamp(guard.suspicion + rate * dt, 0, 100);
       guard.lastSeenX = world.player.x;
       guard.lastSeenY = world.player.y;

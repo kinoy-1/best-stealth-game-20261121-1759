@@ -2,7 +2,7 @@
 // Movement is velocity-based with acceleration and friction so the moth feels
 // light but not slippery; running is fast and loud, sneaking is slow and small.
 // Footsteps are a real system: running leaves noise rings the keepers hear.
-import { PLAYER, GUARD, PUFF, TILE } from './config.js';
+import { PLAYER, GUARD, PUFF, VEIL, TILE } from './config.js';
 import { walkableAt, tileAt } from './levels.js';
 import { clamp } from './random.js';
 
@@ -23,6 +23,9 @@ export function createPlayer(start, upgrades) {
     noiseFactor: 1 - 0.2 * silent,
     puffs: PUFF.startCharges + (upgrades['pollen-pouch'] || 0),
     puffCooldown: 0,
+    // Moonpetal Veils: spun silk, one a night, more with a Veil Pouch.
+    veils: VEIL.startCharges + (upgrades['veil-pouch'] || 0),
+    veilCooldown: 0,
     stepTimer: 0,
     stepPhase: 0,
     wingPhase: 0,
@@ -100,6 +103,7 @@ export function updatePlayer(world, input, dt) {
   }
 
   if (p.puffCooldown > 0) p.puffCooldown -= dt;
+  if (p.veilCooldown > 0) p.veilCooldown -= dt;
 }
 
 /**
@@ -121,6 +125,8 @@ export function throwPuff(world, targetX, targetY) {
   world.puffs.push({
     x: p.x,
     y: p.y,
+    ox: p.x, // where the moth stood: a hound follows the scent home
+    oy: p.y,
     tx,
     ty,
     t: 0,
@@ -129,6 +135,23 @@ export function throwPuff(world, targetX, targetY) {
     linger: PUFF.lingerSeconds,
   });
   world.audio.puffThrow();
+  return true;
+}
+
+/**
+ * Drop a Moonpetal Veil at the moth's feet: a circle of spun silk no eye
+ * can see through, for a few seconds. It does not move, it shimmers, and it
+ * costs one of the night's few charges.
+ */
+export function dropVeil(world) {
+  const p = world.player;
+  if (p.veils <= 0 || p.veilCooldown > 0) return false;
+  p.veils -= 1;
+  p.veilCooldown = VEIL.cooldown;
+  world.veils.push({ x: p.x, y: p.y, t: VEIL.seconds, radius: VEIL.radius });
+  world.audio.veil();
+  world.burst(p.x, p.y, '#c9b8ff', 16);
+  world.addFloatText(p.x, p.y - 18, 'moonpetal veil', '#c9b8ff', 1.2);
   return true;
 }
 

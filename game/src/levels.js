@@ -1,4 +1,6 @@
-// levels.js — the seven nights of the Lantern Garden.
+// levels.js — the ten nights: seven in the Lantern Garden, three past the
+// Moon Gate in the Moonwell Garden, where cold pools light a moth like a
+// stage and Pollen Hounds follow a puff's scent home.
 // Every map is 40 x 25 tiles of 32 px (1280 x 800). Legend:
 //   # hedge wall (blocks movement and sight)   . stone path
 //   , lawn                                     B bush (walkable, hides the moth, blocks sight)
@@ -23,6 +25,7 @@ export const LEGEND = {
   LANTERN: 'L',
   STATUE: 'S',
   FLOWER: 'F',
+  MOONWELL: 'W', // cold blue pool: blocks movement, lights the moth like a stage
   PLAYER: 'P',
   EXIT: 'E',
   PETAL: '*',
@@ -32,7 +35,7 @@ export const LEGEND = {
 // Tiles a keeper's eye cannot see through.
 export const SIGHT_BLOCKERS = new Set(['#', 'B', 'S', 'L']);
 // Tiles nothing walks through.
-export const SOLID = new Set(['#', '~', 'L', 'S']);
+export const SOLID = new Set(['#', '~', 'L', 'S', 'W']);
 // Tiles that hide the moth completely while it stands in them.
 export const HIDING = new Set(['B', 'T']);
 
@@ -135,7 +138,7 @@ export const LEVELS = [
       '#,....TTTTT....,L...L.....,,,,,,.......,#',
       '#,.............,L.*.L.....,,,,,,.......,#',
       '#,....*........,L...L.....,,,,,,.......,#',
-      '#,.............,LLLLL.....,,,,,,.......,#',
+      '#,.............,LL.LL.....,,,,,,.......,#',
       '#,....TTTTT....,,,,,,,,,,,,,,,,,,......,#',
       '#,....TTTTT............................,#',
       '#,....................................,#',
@@ -210,7 +213,7 @@ export const LEVELS = [
       '#,.....TTTTT......,L....L,......TTTTT...#',
       '#,..*..,..........,L.*..L,..........*..,#',
       '#,.....TTTTT......,L....L,......TTTTT...#',
-      '#,.....TTTTT......,LLLLLL,......TTTTT...#',
+      '#,.....TTTTT......,LLL.LL,......TTTTT...#',
       '#,.....TTTTT......,,,,,,,,......TTTTT...#',
       '#,....................................,#',
       '#,.....BBBBB................BBBBB......,#',
@@ -305,6 +308,132 @@ export const LEVELS = [
     ],
     7,
   ),
+
+  // ---- Night VIII — Moonwell Garden: the second garden opens ----
+  // A cold blue pool in the middle of the court, and a Pollen Hound circling
+  // it. The well lights a moth like a stage; the hound follows a puff home.
+  night(
+    [
+      '########################################',
+      '#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#',
+      '#,P....,.....,.....,.....,....*......E,#',
+      '#,.....,....,....,......,.....,.......,#',
+      '#,.....,BBBB,....,......,.....,.......,#',
+      '#,.....,BBBB,....,WWWWWW,....,........,#',
+      '#,.....,....,....,WWWWWW,....,..*.....,#',
+      '#,.....,....,....,WWWWWW,....,........,#',
+      '#,.....,BBBB,....,WWWWWW,....,........,#',
+      '#,.....,BBBB,....,......,.....,.......,#',
+      '#,.....,....,....,......,.....,....*..,#',
+      '#,....................................,#',
+      '#,....TTTTT............................,#',
+      '#,....TTTTT....,LLLLL.....,,,,,,.......,#',
+      '#,....TTTTT....,L...L.....,,,,,,.......,#',
+      '#,.............,L.*.L.....,,,,,,.......,#',
+      '#,....*........,L...L.....,,,,,,.......,#',
+      '#,.............,LL.LL.....,,,,,,.......,#',
+      '#,....TTTTT....,,,,,,,,,,,,,,,,,,......,#',
+      '#,....TTTTT............................,#',
+      '#,....................................,#',
+      '#,....................................,#',
+      '#,....................................,#',
+      '#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#',
+      '########################################',
+    ],
+    [
+      { type: 'keeper', name: 7, path: [[4, 2], [34, 2], [34, 10], [4, 10]], pause: 0.9, speed: 1.0 },
+      { type: 'keeper', name: 0, path: [[4, 21], [35, 21], [35, 13], [4, 13]], pause: 0.9, speed: 1.0 },
+      { type: 'bearer', name: 2, path: [[19, 2], [19, 21]], pause: 1.6, speed: 0.85 },
+      { type: 'hound', name: 0, path: [[15, 6], [15, 9], [24, 9], [24, 6]], pause: 0.6, speed: 1.0 },
+    ],
+    5,
+  ),
+
+  // ---- Night IX — Moonwell Deep: two wells, two hounds ----
+  // The wells are everywhere now and the hounds run in pairs. A puff thrown
+  // here is a trail home — spend it only when the way out is clear.
+  night(
+    [
+      '########################################',
+      '#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#',
+      '#,P....,.....,.....,.....,....*......E,#',
+      '#,.....,....,.....,....,.....,........,#',
+      '#,.....,....,WWWWW,....,.....,........,#',
+      '#,.....,....,WWWWW,....,.....,........,#',
+      '#,.....,....,WWWWW,....,.....,........,#',
+      '#,.....,....,.....,....,.....,..*.....,#',
+      '#,.....,BBBB,....,.....,.....,........,#',
+      '#,..*..,BBBB,....,.....,.....,........,#',
+      '#,.....,BBBB,....,.....,.....,........,#',
+      '#,....................................,#',
+      '#,....TTTTT,....,.....,.....,....*....,#',
+      '#,....TTTTT,....,.....,.....,.........,#',
+      '#,.....,....,.....,....,.....,........,#',
+      '#,.....,....,WWWWW,....,.....,........,#',
+      '#,.....,....,WWWWW,....,.....,....*...,#',
+      '#,.....,....,WWWWW,....,.....,........,#',
+      '#,.....,....,.....,....,.....,........,#',
+      '#,....TTTTT,....,.....,.....,.........,#',
+      '#,..*..,....,.....,....,.....,........,#',
+      '#,....................................,#',
+      '#,....................................,#',
+      '#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#',
+      '########################################',
+    ],
+    [
+      { type: 'keeper', name: 1, path: [[4, 2], [34, 2], [34, 10], [4, 10]], pause: 0.8, speed: 1.05 },
+      { type: 'keeper', name: 2, path: [[4, 21], [35, 21], [35, 13], [4, 13]], pause: 0.8, speed: 1.05 },
+      { type: 'ringer', name: 1, path: [[19, 2], [19, 22]], pause: 1.8, speed: 0.95 },
+      { type: 'watcher', name: 1, path: [[20, 12]], pause: 0, speed: 0 },
+      { type: 'hound', name: 1, path: [[11, 4], [11, 7], [19, 7], [19, 4]], pause: 0.5, speed: 1.0 },
+      { type: 'hound', name: 2, path: [[11, 15], [11, 18], [19, 18], [19, 15]], pause: 0.5, speed: 1.0 },
+    ],
+    6,
+  ),
+
+  // ---- Night X — The Last Petal: everything, at once, in the cold blue ----
+  // The Moon Gate's own court: every keeper, every hound, every well. The
+  // last petal grows in the middle of it all. Take it, and the garden is yours.
+  night(
+    [
+      '########################################',
+      '#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#',
+      '#,P...#.....L.....#.........*....#....E,#',
+      '#,....#...........#....,....#.........,#',
+      '#,....#.BBBB......#....,....#.BBBB....,#',
+      '#,....#...........#....,....#.........,#',
+      '#,....####........#....,....####......,#',
+      '#,....,...........#....,....,.........,#',
+      '#,..*,..#####....#....,.#####....*...,#',
+      '#,....,......,....#....,....,........,#',
+      '#,....,......,....#....#....,....#....,#',
+      '#,....####....,~~~#~~~~#,~~~#....#....,#',
+      '#,....,......,~~~..*...WWWW,....,#....,#',
+      '#,..*#,#####,~~~......,~~~.,#####.*..,#',
+      '#,....,......,~~~......,~~~.,....#....,#',
+      '#,....,......,~~~#~~~~#,~~~#....,#....,#',
+      '#,....####....,....#....,....####.....#',
+      '#,....,......,....#....,....,........,#',
+      '#,....,......,....#....,....,........,#',
+      '#,..*,..#####,....#....,#####........,#',
+      '#,....,......,....#....,....,........,#',
+      '#,....,......,....#....,....#........,#',
+      '#,....................................,#',
+      '#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#',
+      '########################################',
+    ],
+    [
+      { type: 'keeper', name: 7, path: [[5, 2], [5, 22], [14, 22], [14, 2]], pause: 0.7, speed: 1.15 },
+      { type: 'keeper', name: 0, path: [[25, 2], [25, 22], [34, 22], [34, 2]], pause: 0.7, speed: 1.15 },
+      { type: 'keeper', name: 1, path: [[17, 2], [22, 2], [22, 22], [17, 22]], pause: 1.0, speed: 1.05 },
+      { type: 'bearer', name: 1, path: [[9, 12], [30, 12]], pause: 1.4, speed: 0.9 },
+      { type: 'ringer', name: 2, path: [[19, 2], [19, 22]], pause: 1.6, speed: 1.0 },
+      { type: 'watcher', name: 0, path: [[20, 12]], pause: 0, speed: 0 },
+      { type: 'hound', name: 0, path: [[6, 8], [13, 8], [13, 14], [6, 14]], pause: 0.5, speed: 1.0 },
+      { type: 'hound', name: 1, path: [[32, 17], [36, 17], [36, 20], [32, 20]], pause: 0.5, speed: 1.0 },
+    ],
+    7,
+  ),
 ];
 
 /** Parse one level's rows into the structures the engine uses. */
@@ -313,6 +442,7 @@ export function parseLevel(levelIndex) {
   const grid = [];
   const petals = [];
   const lanterns = [];
+  const moonwells = [];
   let playerStart = null;
   let exit = null;
   for (let y = 0; y < ROWS; y += 1) {
@@ -333,12 +463,14 @@ export function parseLevel(levelIndex) {
         ch = ',';
       } else if (ch === 'L') {
         lanterns.push({ x: x * TILE + TILE / 2, y: y * TILE + TILE / 2, flicker: (x * 31 + y * 17) % 100 });
+      } else if (ch === 'W') {
+        moonwells.push({ x: x * TILE + TILE / 2, y: y * TILE + TILE / 2, phase: (x * 13 + y * 29) % 100 });
       }
       row.push(ch);
     }
     grid.push(row);
   }
-  return { level, grid, petals, lanterns, playerStart, exit };
+  return { level, grid, petals, lanterns, moonwells, playerStart, exit };
 }
 
 /** Tile character at pixel coordinates (out of bounds counts as hedge). */
