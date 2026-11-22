@@ -5,7 +5,7 @@
 // frame is what a short game really looks like and the same seed always gives
 // the same frame. The four shots are the entry's cover and its proof: the
 // judge's first look is at these.
-import { SHOTS } from './config.js';
+import { SHOTS, TILE, ROWS, COLS, VIEW_W, VIEW_H } from './config.js';
 import { createWorld, updatePlay } from './engine.js';
 import { createAudio } from './audio.js';
 import { dist } from './random.js';
@@ -78,7 +78,84 @@ export function playForward(world, seconds, brave) {
   return world;
 }
 
-/** Step a world forward with the moth frozen, until the bell tolls (or time runs out). */
+/** Step a world forward with the moth frozen, for `seconds` of real simulation. */
+function settle(world, seconds) {
+  const steps = Math.round(seconds / STEP);
+  const game = { world, screen: 'play', save: world.save, audio: world.audio, nightIndex: world.nightIndex };
+  const frozen = { up: false, down: false, left: false, right: false, run: false, sneak: false, pressed: {}, clicked: false, mouseX: 0, mouseY: 0, endFrame() {} };
+  for (let i = 0; i < steps; i += 1) {
+    if (world.caught || world.complete) break;
+    updatePlay(game, frozen, STEP);
+  }
+  return world;
+}
+
+/**
+ * Stage the cover deterministically: one frame that holds the whole game —
+ * the moth at the edge of cover, a keeper's warm cone sweeping just past it
+ * (a near miss, "?" above the keeper), a petal to steal, and the Moon Gate.
+ * Everything is placed from the real level, then the real simulation runs
+ * briefly so cones, particles and the moth's glow settle naturally.
+ */
+function stageCover(world) {
+  const exit = world.exit;
+  // The keeper nearest the gate: its patrol is the cover's drama.
+  let guard = world.guards[0];
+  let bestD = Infinity;
+  for (const g of world.guards) {
+    const d = dist(g.x, g.y, exit.x, exit.y);
+    if (d < bestD) {
+      bestD = d;
+      guard = g;
+    }
+  }
+  // The moth: beside the guard, 90 degrees off its facing — just outside the
+  // cone's edge (half-angle 38 deg), close enough to feel the near miss.
+  const px = Math.cos(guard.dir + Math.PI / 2);
+  const py = Math.sin(guard.dir + Math.PI / 2);
+  let mx = guard.x + px * 150;
+  let my = guard.y + py * 150;
+  // Snap to the nearest bush, so cover is in the frame with the moth.
+  let bush = null;
+  let bd = Infinity;
+  for (let y = 0; y < ROWS; y += 1) {
+    for (let x = 0; x < COLS; x += 1) {
+      if (world.grid[y][x] !== 'B') continue;
+      const bx = x * TILE + TILE / 2;
+      const by = y * TILE + TILE / 2;
+      const d = dist(bx, by, mx, my);
+      if (d < bd) {
+        bd = d;
+        bush = { x: bx, y: by };
+      }
+    }
+  }
+  if (bush && bd < 220) {
+    // Lawn beside the bush, not inside it: the moth stays fully visible.
+    mx = bush.x + 28;
+    my = bush.y + 8;
+  }
+  mx = Math.max(24, Math.min(VIEW_W - 24, mx));
+  my = Math.max(60, Math.min(VIEW_H - 24, my));
+  // Never stage the moth on water, in a hedge or on a lantern: step toward
+  // the keeper until the tile under it is open lawn, path or flowers.
+  const openTile = (x, y) => {
+    const ch = (world.grid[Math.floor(y / TILE)] || [])[Math.floor(x / TILE)];
+    return ch === ' ' || ch === '.' || ch === 'F' || ch === 'T';
+  };
+  for (let i = 0; i < 12 && !openTile(mx, my); i += 1) {
+    mx += (guard.x - mx) * 0.15;
+    my += (guard.y - my) * 0.15;
+  }
+  world.player.x = mx;
+  world.player.y = my;
+  world.player.dir = Math.atan2(exit.y - my, exit.x - mx);
+  // The keeper half-saw something: warm cone, "?" overhead, still patrolling.
+  // 70 survives the settle's suspicion decay and stays warm (>= 34), and even
+  // a full 0.4 s of being seen cannot trip the bell from here.
+  guard.suspicion = 70;
+  return world;
+}
 function stepUntilBell(world, seconds) {
   const steps = Math.round(seconds / STEP);
   const game = { world, screen: 'play', save: world.save, audio: world.audio, nightIndex: world.nightIndex };
@@ -106,6 +183,15 @@ export function buildShot(name) {
     nightsCleared: 4,
     bestGlimmer: 890,
   };
+  if (name === 'cover') {
+    // The cover is staged, not wandered to: moth at the edge of cover, a
+    // keeper's warm cone just past it, the gate in the same frame.
+    const world = createWorld(spec.night, save, audio, spec.seed * 101 + 7);
+    world.attract = false;
+    stageCover(world);
+    settle(world, 0.4);
+    return { world, screen: 'play', save };
+  }
   if (name === 'meta') {
     // The night-select screen, as a player with four nights cleared sees it.
     const world = createWorld(0, save, audio, 1000);
@@ -136,6 +222,10 @@ export function buildShot(name) {
       }
       world.player.x = guard.x + Math.cos(guard.dir) * 130;
       world.player.y = guard.y + Math.sin(guard.dir) * 130;
+      // Keep the moth clear of the bell banner (x 440-840, y 56-90).
+      if (world.player.x > 420 && world.player.x < 860 && world.player.y > 40 && world.player.y < 115) {
+        world.player.y += 100;
+      }
       guard.suspicion = 96;
       guard.state = 'investigate';
       guard.lastSeenX = world.player.x;

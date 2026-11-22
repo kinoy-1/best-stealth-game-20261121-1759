@@ -197,7 +197,7 @@ function drawExit(ctx, world) {
   const open = world.gateOpen;
   const pulse = 0.7 + 0.3 * Math.sin(world.time * 2.4);
   ctx.save();
-  ctx.globalAlpha = open ? 0.5 * pulse : 0.22;
+  ctx.globalAlpha = open ? 0.5 * pulse : 0.36;
   ctx.fillStyle = PALETTE.moonGate;
   ctx.beginPath();
   ctx.arc(x, y, open ? 34 : 24, 0, Math.PI * 2);
@@ -212,6 +212,14 @@ function drawExit(ctx, world) {
   ctx.arc(x, y - 4, 12, Math.PI * 0.15, Math.PI * 1.35);
   ctx.arc(x + 5, y - 6, 10, Math.PI * 1.2, Math.PI * 0.3, true);
   ctx.fill();
+  // The gate's name, so the exit reads as the goal at a glance.
+  ctx.font = 'bold 11px Georgia, serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = 'rgba(0,0,0,0.65)';
+  ctx.fillText('MOON GATE', x + 1, y + 37);
+  ctx.fillStyle = 'rgba(188,210,255,0.85)';
+  ctx.fillText('MOON GATE', x, y + 36);
   if (open) {
     ctx.strokeStyle = 'rgba(188,210,255,0.9)';
     ctx.lineWidth = 2;
@@ -232,9 +240,15 @@ function drawGuard(ctx, world, guard) {
   ctx.beginPath();
   ctx.arc(guard.x, guard.y, GUARD.radius, 0, Math.PI * 2);
   ctx.fill();
+  // A bright rim, so the keeper reads against the dark floor at a glance.
+  ctx.strokeStyle = hot ? 'rgba(255,120,90,0.9)' : 'rgba(255,217,138,0.75)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(guard.x, guard.y, GUARD.radius, 0, Math.PI * 2);
+  ctx.stroke();
   ctx.fillStyle = guard.type === 'hound' ? '#d9ccff' : PALETTE.keeper;
   ctx.beginPath();
-  ctx.arc(guard.x, guard.y, 7.5, 0, Math.PI * 2);
+  ctx.arc(guard.x, guard.y, 8, 0, Math.PI * 2);
   ctx.fill();
   // A wide-brimmed hat.
   ctx.fillStyle = cloak;
@@ -371,10 +385,10 @@ function drawPlayer(ctx, world) {
   ctx.restore();
   // The moth's own faint glow, so the player can always find it in the dark.
   ctx.save();
-  ctx.globalAlpha = 0.18;
+  ctx.globalAlpha = 0.30;
   ctx.fillStyle = '#fff6d8';
   ctx.beginPath();
-  ctx.arc(p.x, p.y, 20, 0, Math.PI * 2);
+  ctx.arc(p.x, p.y, 27, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 }
@@ -415,7 +429,7 @@ function drawDarkness(ctx, world) {
   const { ctx: dctx } = getDarkCanvas();
   dctx.clearRect(0, 0, VIEW_W, VIEW_H);
   dctx.globalCompositeOperation = 'source-over';
-  dctx.fillStyle = 'rgba(3, 8, 20, 0.80)';
+  dctx.fillStyle = 'rgba(3, 8, 20, 0.64)';
   dctx.fillRect(0, 0, VIEW_W, VIEW_H);
   dctx.globalCompositeOperation = 'destination-out';
   const hole = (x, y, r, alpha) => {
@@ -475,7 +489,7 @@ export function drawWorld(ctx, world) {
   // A soft vignette, so the garden feels like night.
   const vg = ctx.createRadialGradient(640, 400, 320, 640, 400, 780);
   vg.addColorStop(0, 'rgba(0,0,0,0)');
-  vg.addColorStop(1, 'rgba(0,0,0,0.35)');
+  vg.addColorStop(1, 'rgba(0,0,0,0.22)');
   ctx.fillStyle = vg;
   ctx.fillRect(0, 0, VIEW_W, VIEW_H);
 }
